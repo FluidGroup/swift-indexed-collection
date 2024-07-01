@@ -14,7 +14,7 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            IndexedForEach(data: numbers) { index, element in
+            IndexedForEach(numbers) { index, element in
                 Text("\(index): \(element)")
             }
         }
