@@ -112,6 +112,7 @@ extension IndexedArray.Element: Identifiable where Base.Element: Identifiable {
 
 struct Item: Identifiable {
   let id: String
+  let value: UUID = .init()
 }
 
 #Preview {
@@ -149,13 +150,18 @@ struct Item: Identifiable {
 }
 
 #Preview {
+  let _ = print(
+    IndexedArray(
+      ["a", "b", "c", "d", "d", "e"].map(Item.init(id:))[2...4]
+    )
+  )
   VStack {
     IndexedForEach(
       IndexedArray(
-        ["a", "b", "c", "d", "e"].map(Item.init(id:))[2...3]
+        ["a", "b", "c", "d", "d", "e"].map(Item.init(id:))[2...4]
       )
-    ) { index, element in
-      Text("\(index): \(element)")
+    ) { (index, element) in
+      Text("index: \(index), id: \(element.id), value: \(element.value)")
     }
   }
 }
