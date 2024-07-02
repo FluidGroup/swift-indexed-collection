@@ -148,9 +148,25 @@ struct Item: Identifiable {
   }
 }
 
+#Preview {
+  VStack {
+    IndexedForEach([1, 2, 3, 4, 5][2...3], id: \.self) { index, element in
+      Text("\(index): \(element)")
+    }
+  }
+}
+
 #Preview { 
   VStack {
-    IndexedForEach.init([Item(id: "a")]) { index, element in
+    IndexedForEach.init(["a", "b", "c", "d", "e"].map(Item.init(id:))) { index, element in
+      Text("\(index): \(element)")
+    }
+  }
+}
+
+#Preview {
+  VStack {
+    IndexedForEach.init(["a", "b", "c", "d", "e"].map(Item.init(id:))[2...3]) { index, element in
       Text("\(index): \(element)")
     }
   }
