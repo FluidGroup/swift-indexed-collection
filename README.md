@@ -44,3 +44,31 @@ struct IdentifiableItem: Identifiable {
   }
 }
 ```
+
+## Showcases
+
+Using Group new API in iOS18. reversing z-index in a collection of view.
+
+```swift
+public struct ReversedZIndex<Content: View>: View {
+  
+  private let content: Content
+  
+  public init(@ViewBuilder content: () -> Content) {
+    self.content = content()
+  }
+  
+  public var body: some View {
+    Group(
+      subviewsOf: content,
+      transform: { collection in
+        let count = collection.count
+        ForEach(IndexedCollection(collection), id: \.id) { element in
+          element.value
+            .zIndex(Double(count - element.index))
+        }
+      }
+    )
+  }
+}
+```
