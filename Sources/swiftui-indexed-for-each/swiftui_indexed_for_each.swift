@@ -1,101 +1,123 @@
 import SwiftUI
 
-public struct IndexedForEach<Element, ID: Hashable, Content: View>: View {
-  
-  private let data: [Element]
-  
-  private let content: (Array<Element>.Index, Element) -> Content
-  
-  private let id: KeyPath<IndexedArray<Element>.Element, ID>
-  
+public struct IndexedForEach<Base: RandomAccessCollection, ID: Hashable, Content: View>: View {
+
+  public typealias Index = Base.Index
+
+  private let data: Base
+  private let content: (Index, Base.Element) -> Content
+  private let id: KeyPath<IndexedArray<Base>.Element, ID>
+
   public init(
-    _ data: [Element],
-    @ViewBuilder content: @escaping (Array<Element>.Index, Element) -> Content
-  ) where Element: Identifiable, ID == Element.ID {
-    
+    _ data: Base,
+    @ViewBuilder content: @escaping (Index, Base.Element) -> Content
+  ) where Base.Element: Identifiable, ID == Base.Element.ID {
+
     self.data = data
     self.content = content
-    self.id = \.1.id
+    self.id = \.value.id
   }
-  
+
   public init(
-    _ data: [Element],
-    id: KeyPath<Element, ID>,
-    @ViewBuilder content: @escaping (Array<Element>.Index, Element) -> Content
-  ) where Data: RandomAccessCollection, ID: Hashable {
+    _ data: Base,
+    id: KeyPath<Base.Element, ID>,
+    @ViewBuilder content: @escaping (Index, Base.Element) -> Content
+  ) where ID: Hashable {
     self.data = data
-    self.id = (\IndexedArray<Element>.Element.1).appending(path: id)
+    self.id = (\IndexedArray<Base>.Element.value).appending(path: id)
     self.content = content
   }
   
   public var body: some View {
-    ForEach(IndexedArray.init(base: data), id: id) { e in
-      content(e.0, e.1)
+    ForEach(IndexedArray(data), id: id) {
+      content($0.index, $0.value)
     }
   }
-  
 }
 
-struct IndexedArray<SourceElement>: RandomAccessCollection {
-  
-  typealias Iterator = IndexingIterator<Self>
-  
-  typealias Element = (Index, Array<SourceElement>.Element)
-  
-  typealias Index = Array<SourceElement>.Index
-  
-  typealias SubSequence = ArraySlice<Element>
-  
-  typealias Indices = Array<SourceElement>.Indices
-  
-  var base: [SourceElement]
-  
-  var indices: Array<SourceElement>.Indices { base.indices }
-  
-  var startIndex: Array<SourceElement>.Index { base.startIndex }
-  
-  var endIndex: Array<SourceElement>.Index { base.endIndex }
-  
-  init(base: consuming [SourceElement]) {
+
+public struct IndexedArray<Base: RandomAccessCollection>: RandomAccessCollection {
+
+  @usableFromInline
+  let base: Base
+
+  @inlinable
+  init(_ base: Base) {
     self.base = base
+    self.indices = base.indices
   }
-  
-  func index(before i: Index) -> Index {
-    base.index(before: i)
-  }
-  
-  func index(after i: Index) -> Index {
-    base.index(after: i)
-  }
-  
-  subscript(bounds: Range<Index>) -> SubSequence {
-    
-    // TODO: This is not efficient
-    
-    var slice: [Element] = []
-    
-    for index in bounds {
-      slice.append((index, base[index]))
+
+  // MARK: Collection
+
+  public struct Element {
+
+    @usableFromInline
+    let index: Base.Index
+
+    @usableFromInline
+    let value: Base.Element
+
+    @inlinable
+    init(index: Base.Index, value: Base.Element) {
+      self.index = index
+      self.value = value
     }
-    
-    return .init(slice)
   }
-  
-  subscript(position: Index) -> Element {
-    return (position, base[position])
+
+  @inlinable
+  public func index(before i: Base.Index) -> Base.Index {
+    indices.index(before: i)
   }
-  
+
+  @inlinable
+  public func index(after i: Base.Index) -> Base.Index {
+    indices.index(after: i)
+  }
+
+  // MARK: RandomAccessCollection
+
+  public var startIndex: Base.Index {
+    indices.startIndex
+  }
+
+  public var endIndex: Base.Index {
+    indices.endIndex
+  }
+
+  public let indices: Base.Indices
+
+  @inlinable
+  public subscript(bounds: Range<Base.Index>) -> Slice<Self> {
+    .init(base: self, bounds: bounds)
+  }
+
+  @inlinable
+  public subscript(position: Base.Index) -> Element {
+    return .init(
+      index: indices[position],
+      value: base[position]
+    )
+  }
 }
+
+extension IndexedArray.Element: Identifiable where Base.Element: Identifiable {
+
+  public var id: Base.Element.ID {
+    self.value.id
+  }
+}
+
 
 #if DEBUG
 
 struct Item: Identifiable {
-  let id: Int
+  let id: String
+  let value: UUID = .init()
 }
 
 #Preview {
   VStack {
-    IndexedForEach([1, 2, 3], id: \.self) { index, element in
+    IndexedForEach([1, 2, 3, 4, 5], id: \.self) { index, element in
       Text("\(index): \(element)")
     }
   }
@@ -103,8 +125,43 @@ struct Item: Identifiable {
 
 #Preview { 
   VStack {
-    IndexedForEach.init([Item(id: 0)]) { index, element in
+    IndexedForEach.init(["a", "b", "c", "d", "e"].map(Item.init(id:))) { index, element in
       Text("\(index): \(element)")
+    }
+  }
+}
+
+#Preview {
+  VStack {
+    IndexedForEach([1, 2, 3, 4, 5][2...3], id: \.self) { index, element in
+      Text("\(index): \(element)")
+    }
+  }
+}
+
+#Preview {
+  VStack {
+    IndexedForEach(
+      ["a", "b", "c", "d", "e"].map(Item.init(id:))[2...3]
+    ) { index, element in
+      Text("\(index): \(element)")
+    }
+  }
+}
+
+#Preview {
+  let _ = print(
+    IndexedArray(
+      ["a", "b", "c", "d", "d", "e"].map(Item.init(id:))[2...4]
+    )
+  )
+  VStack {
+    IndexedForEach(
+      IndexedArray(
+        ["a", "b", "c", "d", "d", "e"].map(Item.init(id:))[2...4]
+      )
+    ) { (index, element) in
+      Text("index: \(index), id: \(element.id), value: \(element.value)")
     }
   }
 }
