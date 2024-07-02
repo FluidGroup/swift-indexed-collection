@@ -120,16 +120,8 @@ public struct IndexedForEach<Base: RandomAccessCollection, ID: Hashable, Content
     }
 
     @inlinable
-    subscript(bounds: Range<Int>) -> ArraySlice<Element> {
-      // TODO: create custom SubSlice
-      .init(
-        bounds.map {
-          Element(
-            index: $0,
-            value: base[_indices[$0]]
-          )
-        }
-      )
+    subscript(bounds: Range<Int>) -> Slice<Self> {
+      .init(base: self, bounds: bounds)
     }
 
     @inlinable
@@ -150,7 +142,7 @@ struct Item: Identifiable {
 
 #Preview {
   VStack {
-    IndexedForEach([1, 2, 3], id: \.self) { index, element in
+    IndexedForEach([1, 2, 3, 4, 5], id: \.self) { index, element in
       Text("\(index): \(element)")
     }
   }
