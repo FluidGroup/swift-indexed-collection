@@ -51,11 +51,9 @@ public struct IndexedArray<Base: RandomAccessCollection>: RandomAccessCollection
 
   public struct Element {
 
-    @usableFromInline
-    let index: Base.Index
+    public let index: Base.Index
 
-    @usableFromInline
-    let value: Base.Element
+    public let value: Base.Element
 
     @inlinable
     init(index: Base.Index, value: Base.Element) {
