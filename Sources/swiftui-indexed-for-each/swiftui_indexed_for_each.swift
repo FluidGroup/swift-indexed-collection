@@ -21,7 +21,7 @@ public struct IndexedForEach<Base: RandomAccessCollection, ID: Hashable, Content
 //    }
 //  }
 
-  public typealias Index = Int
+  public typealias Index = Base.Index
 
   private let data: Base
   private let content: (Index, Base.Element) -> Content
@@ -74,19 +74,16 @@ public struct IndexedForEach<Base: RandomAccessCollection, ID: Hashable, Content
     // MARK: Collection
 
     @usableFromInline
-    typealias Iterator = IndexingIterator<Self>
-
-    @usableFromInline
     struct Element {
 
       @usableFromInline
-      let index: Int
+      let index: Index
 
       @usableFromInline
       let value: Base.Element
 
       @inlinable
-      init(index: Int, value: Base.Element) {
+      init(index: Index, value: Base.Element) {
         self.index = index
         self.value = value
       }
@@ -126,9 +123,10 @@ public struct IndexedForEach<Base: RandomAccessCollection, ID: Hashable, Content
 
     @inlinable
     subscript(position: Int) -> Element {
-      .init(
-        index: position,
-        value: base[_indices[position]]
+      let index = _indices[position]
+      return .init(
+        index: index,
+        value: base[index]
       )
     }
   }
