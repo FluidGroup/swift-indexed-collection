@@ -8,7 +8,7 @@ public struct IndexedCollection<Base: RandomAccessCollection>: RandomAccessColle
   let base: Base
 
   @inlinable
-  init(_ base: Base) {
+  public init(_ base: Base) {
     self.base = base
     self.indices = base.indices
   }
