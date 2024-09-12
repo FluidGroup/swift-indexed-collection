@@ -17,6 +17,7 @@ ForEach(zip(array.indices, array), id: \.0) { ... }
 There is downside like followings:
 - Creating new buffer by making new collection
 - `enumerated` provides index from 0 so that makes wrong access on using slice.
+- animations won't work well since just using index.
 
 ## Usage
 
