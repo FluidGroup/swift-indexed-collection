@@ -71,6 +71,10 @@ extension IndexedCollection.Element: Identifiable where Base.Element: Identifiab
   }
 }
 
+extension IndexedCollection.Element: Hashable where Base.Element: Hashable, Base.Index: Hashable {}
+
+extension IndexedCollection.Element: Equatable where Base.Element: Equatable {}
+
 #if canImport(SwiftUI)
 import SwiftUI
 
